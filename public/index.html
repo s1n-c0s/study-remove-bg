@@ -28,7 +28,7 @@
             let formData = new FormData();
             formData.append('image', input.files[0]);
 
-            fetch('/remove_bg', { method: 'POST', body: formData })
+            fetch('/api/index', { method: 'POST', body: formData })
                 .then(response => response.json())  // Parse response as JSON
                 .then(data => {
                     if (data.image) {
