@@ -9,11 +9,12 @@
 </head>
 
 <body>
-    <label for="uploadInput">Choose an image:</label>
-    <input type="file" id="uploadInput" accept="image/*" title="Upload an image to remove its background">
+    <h2>Upload an Image to Remove Background</h2>
+    <label for="uploadInput">Choose an image file:</label>
+    <input type="file" id="uploadInput" accept="image/*" title="Upload an image file">
     <button onclick="uploadImage()">Remove Background</button>
-    <br><br>
-    <img id="outputImage" alt="Processed image will appear here" title="Processed image preview">
+    <img id="outputImage" class="responsive-image" alt="Processed image with background removed"
+        title="Processed image with background removed">
 
     <script>
         function uploadImage() {
@@ -27,10 +28,11 @@
             formData.append('image', input.files[0]);
 
             fetch('/remove_bg', { method: 'POST', body: formData })
-                .then(response => response.blob())
-                .then(blob => {
-                    let url = URL.createObjectURL(blob);
-                    document.getElementById('outputImage').src = url;
+                .then(response => response.json())  // Parse response as JSON
+                .then(data => {
+                    // Set the image source using base64 data
+                    let imgElement = document.getElementById('outputImage');
+                    imgElement.src = 'data:image/png;base64,' + data.image;
                 })
                 .catch(error => console.error('Error:', error));
         }
