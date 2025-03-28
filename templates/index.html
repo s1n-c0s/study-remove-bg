@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Background Remover</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <label for="uploadInput">Choose an image:</label>
+    <input type="file" id="uploadInput" accept="image/*" title="Upload an image to remove its background">
+    <button onclick="uploadImage()">Remove Background</button>
+    <br><br>
+    <img id="outputImage" alt="Processed image will appear here" title="Processed image preview">
+
+    <script>
+        function uploadImage() {
+            let input = document.getElementById('uploadInput');
+            if (input.files.length === 0) {
+                alert("Please select an image first.");
+                return;
+            }
+
+            let formData = new FormData();
+            formData.append('image', input.files[0]);
+
+            fetch('/remove_bg', { method: 'POST', body: formData })
+                .then(response => response.blob())
+                .then(blob => {
+                    let url = URL.createObjectURL(blob);
+                    document.getElementById('outputImage').src = url;
+                })
+                .catch(error => console.error('Error:', error));
+        }
+    </script>
+</body>
+
+</html>
