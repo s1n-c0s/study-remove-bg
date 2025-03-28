@@ -13,9 +13,9 @@
     <label for="uploadInput">Choose an image file:</label>
     <input type="file" id="uploadInput" accept="image/*" title="Upload an image file">
     <button onclick="uploadImage()">Remove Background</button>
-    <img id="outputImage" class="responsive-image" alt="Processed image with background removed">
+    <br><br>
     <img id="outputImage" class="responsive-image" alt="Processed image with background removed"
-        title="Processed image with background removed">
+        title="Processed image with background removed" style="max-width: 100%;">
 
     <script>
         function uploadImage() {
@@ -31,11 +31,17 @@
             fetch('/remove_bg', { method: 'POST', body: formData })
                 .then(response => response.json())  // Parse response as JSON
                 .then(data => {
-                    // Set the image source using base64 data
-                    let imgElement = document.getElementById('outputImage');
-                    imgElement.src = 'data:image/png;base64,' + data.image;
+                    if (data.image) {
+                        let imgElement = document.getElementById('outputImage');
+                        imgElement.src = 'data:image/png;base64,' + data.image;
+                    } else {
+                        alert("Error: No image returned from the backend");
+                    }
                 })
-                .catch(error => console.error('Error:', error));
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert("Something went wrong! Check the console for more details.");
+                });
         }
     </script>
 </body>

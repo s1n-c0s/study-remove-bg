@@ -2,31 +2,29 @@ from rembg import remove
 from PIL import Image
 import io
 import base64
+from flask import Flask, request, jsonify
 
-def handler(request):
-    if request.method == 'POST':
-        file = request.files['image']
-        input_image = Image.open(file)
-        output_image = remove(input_image)
+app = Flask(__name__)
 
-        img_io = io.BytesIO()
-        output_image.save(img_io, format="PNG")
-        img_io.seek(0)
+@app.route('/remove_bg', methods=['POST'])
+def remove_bg():
+    if 'image' not in request.files:
+        return jsonify({'error': 'No file part'}), 400
 
-        # Convert image to base64
-        img_base64 = base64.b64encode(img_io.read()).decode('utf-8')
+    file = request.files['image']
+    input_image = Image.open(file)
+    output_image = remove(input_image)
 
-        return {
-            'statusCode': 200,
-            'headers': {
-                'Content-Type': 'application/json'
-            },
-            'body': {
-                'image': img_base64
-            }
-        }
+    # Convert to BytesIO
+    img_io = io.BytesIO()
+    output_image.save(img_io, format="PNG")
+    img_io.seek(0)
 
-    return {
-        'statusCode': 405,
-        'body': 'Method Not Allowed'
-    }
+    # Convert to base64
+    img_base64 = base64.b64encode(img_io.read()).decode('utf-8')
+
+    # Return as JSON
+    return jsonify({'image': img_base64})
+
+if __name__ == '__main__':
+    app.run(debug=True)
