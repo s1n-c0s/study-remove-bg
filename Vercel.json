@@ -9,7 +9,7 @@
     "routes": [
         {
             "src": "/remove_bg",
-            "dest": "api/index.py"
+            "dest": "api/remove_bg.py"
         }
     ]
 }
