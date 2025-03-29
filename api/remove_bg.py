@@ -1,28 +1,29 @@
-from flask import Flask, request, jsonify
-from flask_cors import CORS
-import logging
-
+from flask import Flask, request, send_file, jsonify
+import cv2
+import numpy as np
+from rembg import remove
+from PIL import Image
+import io
 
 app = Flask(__name__)
-CORS(app)
 
-# Change this route to match what's expected
 @app.route('/api/remove_bg', methods=['POST'])
-  # Note: Use root path for Vercel serverless functions
 def remove_bg():
-    try:
-        if 'image' not in request.files:
-            return jsonify({'error': 'No file part'}), 400
+    if 'image' not in request.files:
+        return jsonify({'error': 'No file uploaded'}), 400
+    
+    image = request.files['image'].read()
+    img = Image.open(io.BytesIO(image))
+    
+    # Remove background
+    output = remove(img)
+    
+    # Save to BytesIO
+    img_io = io.BytesIO()
+    output.save(img_io, format='PNG')
+    img_io.seek(0)
+    
+    return send_file(img_io, mimetype='image/png')
 
-        # Just for testing - return success without processing
-        return jsonify({'success': True, 'message': 'API endpoint is working'})
-        
-        # Actual implementation would go here
-        
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-logging.basicConfig(level=logging.DEBUG)
-app.logger.debug("API called")
-# This is required for Vercel serverless functions
-from remove_bg import app
+if __name__ == '__main__':
+    app.run(debug=True)

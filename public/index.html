@@ -1,133 +1,39 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Background Remover</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-
-        .error {
-            color: red;
-            margin-top: 10px;
-        }
-
-        .success {
-            color: green;
-            margin-top: 10px;
-        }
-
-        .loading {
-            margin-top: 10px;
-        }
-
-        button {
-            padding: 8px 16px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            cursor: pointer;
-            margin-left: 10px;
-        }
-
-        button:hover {
-            background-color: #45a049;
-        }
-    </style>
+    <title>Remove Background</title>
 </head>
-
 <body>
-    <h2>Upload an Image to Remove Background</h2>
-    <input type="file" id="uploadInput" accept="image/*">
-    <button onclick="uploadImage()">Remove Background</button>
-    <div id="status" class="loading" style="display: none;">Processing image...</div>
-    <div id="errorMessage" class="error" style="display: none;"></div>
-    <div id="successMessage" class="success" style="display: none;"></div>
-    <br><br>
-    <img id="outputImage" alt="Processed image with background removed" style="max-width: 100%; display: none;">
+    <h1>Upload an Image to Remove Background</h1>
+    <form id="uploadForm">
+        <input type="file" id="fileInput" accept="image/*" required>
+        <button type="submit">Remove Background</button>
+    </form>
+    <h3>Processed Image:</h3>
+    <img id="outputImage" alt="Processed Image" style="max-width: 500px;">
 
     <script>
-        function uploadImage() {
-            let input = document.getElementById('uploadInput');
-            let statusDiv = document.getElementById('status');
-            let errorDiv = document.getElementById('errorMessage');
-            let successDiv = document.getElementById('successMessage');
-            let outputImage = document.getElementById('outputImage');
+        document.getElementById('uploadForm').addEventListener('submit', async (event) => {
+            event.preventDefault();
+            
+            let formData = new FormData();
+            formData.append("image", document.getElementById('fileInput').files[0]);
 
-            // Reset UI
-            errorDiv.style.display = 'none';
-            errorDiv.textContent = '';
-            successDiv.style.display = 'none';
-            successDiv.textContent = '';
-            outputImage.style.display = 'none';
+            let response = await fetch('/api/remove_bg', {
+                method: 'POST',
+                body: formData
+            });
 
-            if (input.files.length === 0) {
-                errorDiv.textContent = "Please select an image first.";
-                errorDiv.style.display = 'block';
+            if (!response.ok) {
+                console.error("Server error:", await response.text());
                 return;
             }
 
-            // Show loading status
-            statusDiv.style.display = 'block';
-
-            let formData = new FormData();
-            formData.append('image', input.files[0]);
-
-            // Test with a simple fetch to check if the API is accessible
-            fetch('/', { method: 'POST', body: formData })
-                .then(response => {
-                    console.log("Response status:", response.status);
-                    console.log("Response headers:", response.headers);
-
-                    if (!response.ok) {
-                        throw new Error(`Server returned ${response.status}: ${response.statusText}`);
-                    }
-
-                    const contentType = response.headers.get('content-type');
-                    console.log("Content type:", contentType);
-
-                    if (contentType && contentType.includes('application/json')) {
-                        return response.json();
-                    } else {
-                        return response.text().then(text => {
-                            console.log("Response text:", text.substring(0, 100));
-                            throw new Error('Received non-JSON response');
-                        });
-                    }
-                })
-                .then(data => {
-                    // Hide loading status
-                    statusDiv.style.display = 'none';
-                    console.log("Response data:", data);
-
-                    if (data.success) {
-                        successDiv.textContent = data.message || "API is working correctly!";
-                        successDiv.style.display = 'block';
-                    } else if (data.image) {
-                        outputImage.src = 'data:image/png;base64,' + data.image;
-                        outputImage.style.display = 'block';
-                    } else if (data.error) {
-                        throw new Error(data.error);
-                    } else {
-                        throw new Error("Unexpected response from server");
-                    }
-                })
-                .catch(error => {
-                    // Hide loading status
-                    statusDiv.style.display = 'none';
-
-                    console.error('Error:', error);
-                    errorDiv.textContent = error.message || "An unknown error occurred";
-                    errorDiv.style.display = 'block';
-                });
-        }
+            let blob = await response.blob();
+            document.getElementById('outputImage').src = URL.createObjectURL(blob);
+        });
     </script>
 </body>
-
 </html>

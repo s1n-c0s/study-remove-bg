@@ -1,28 +1,8 @@
 {
-    "version": 2,
-    "builds": [
+    "routes": [
         {
-            "src": "api/remove_bg.py",
-            "use": "@vercel/python"
-        },
-        {
-            "src": "public/**",
-            "use": "@vercel/static"
+            "src": "/api/remove_bg",
+            "dest": "/remove_bg.py"
         }
-    ],
-    "functions": {
-        "api/index.js": {
-            "memory": 1024,
-            "maxDuration": 10
-        },
-        "routes": [
-            {
-                "src": "/api/remove_bg",
-                "dest": "api/remove_bg.py"
-            },
-            {
-                "src": "/(.*)",
-                "dest": "/public/$1"
-            }
-        ]
-    }
+    ]
+}
