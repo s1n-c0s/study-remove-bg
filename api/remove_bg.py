@@ -1,25 +1,23 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-import json
 
 app = Flask(__name__)
-CORS(app)  # Enable CORS for all routes
+CORS(app)
 
-@app.route('/remove_bg', methods=['POST'])
+# Change this route to match what's expected
+@app.route('/', methods=['POST'])  # Note: Use root path for Vercel serverless functions
 def remove_bg():
     try:
-        # Set the content type explicitly
-        response = jsonify({'error': 'Testing response format'})
-        response.headers.set('Content-Type', 'application/json')
-        return response
+        if 'image' not in request.files:
+            return jsonify({'error': 'No file part'}), 400
+
+        # Just for testing - return success without processing
+        return jsonify({'success': True, 'message': 'API endpoint is working'})
         
-        # The actual code would be here once you confirm the response formatting works
+        # Actual implementation would go here
         
     except Exception as e:
-        # Ensure errors are also returned as JSON
-        error_response = jsonify({'error': str(e)})
-        error_response.headers.set('Content-Type', 'application/json')
-        return error_response, 500
+        return jsonify({'error': str(e)}), 500
 
-if __name__ == '__main__':
-    app.run(debug=True)
+# This is required for Vercel serverless functions
+app = app.wsgi_app
