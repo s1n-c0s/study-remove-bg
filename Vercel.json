@@ -1,8 +1,15 @@
 {
     "version": 2,
-    "builds": [],
+    "builds": [
+        {
+            "src": "remove_bg.py",
+            "use": "@vercel/python"
+        }
+    ],
     "routes": [
-      { "src": "/api/remove_bg", "dest": "/" }
+        {
+            "src": "/api/remove_bg",
+            "dest": "/"
+        }
     ]
-  }
-  
+}
