@@ -4,22 +4,46 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Background Remover</title>
+    <style>
+        .error {
+            color: red;
+            margin-top: 10px;
+        }
+        .loading {
+            margin-top: 10px;
+        }
+    </style>
 </head>
 <body>
     <h2>Upload an Image to Remove Background</h2>
     <input type="file" id="uploadInput" accept="image/*">
     <button onclick="uploadImage()">Remove Background</button>
+    <div id="status" class="loading" style="display: none;">Processing image...</div>
+    <div id="errorMessage" class="error" style="display: none;"></div>
     <br><br>
-    <img id="outputImage" alt="Processed image with background removed" style="max-width: 100%;">
+    <img id="outputImage" alt="Processed image with background removed" style="max-width: 100%; display: none;">
 
     <script>
         function uploadImage() {
             let input = document.getElementById('uploadInput');
+            let statusDiv = document.getElementById('status');
+            let errorDiv = document.getElementById('errorMessage');
+            let outputImage = document.getElementById('outputImage');
+            
+            // Reset UI
+            errorDiv.style.display = 'none';
+            errorDiv.textContent = '';
+            outputImage.style.display = 'none';
+            
             if (input.files.length === 0) {
-                alert("Please select an image first.");
+                errorDiv.textContent = "Please select an image first.";
+                errorDiv.style.display = 'block';
                 return;
             }
 
+            // Show loading status
+            statusDiv.style.display = 'block';
+            
             let formData = new FormData();
             formData.append('image', input.files[0]);
 
@@ -28,24 +52,42 @@
                 body: formData 
             })
             .then(response => {
+                // First check if the response is OK
                 if (!response.ok) {
-                    return response.json().then(errorData => {
-                        throw new Error(errorData.error || 'Unknown error occurred');
+                    throw new Error(`Server returned ${response.status}: ${response.statusText}`);
+                }
+                
+                // Check the content type to avoid JSON parsing errors
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    return response.json();
+                } else {
+                    // If not JSON, get the text and throw an error
+                    return response.text().then(text => {
+                        throw new Error('Received non-JSON response: ' + text.substring(0, 100) + '...');
                     });
                 }
-                return response.json();
             })
             .then(data => {
+                // Hide loading status
+                statusDiv.style.display = 'none';
+                
                 if (data.image) {
-                    let imgElement = document.getElementById('outputImage');
-                    imgElement.src = 'data:image/png;base64,' + data.image;
+                    outputImage.src = 'data:image/png;base64,' + data.image;
+                    outputImage.style.display = 'block';
+                } else if (data.error) {
+                    throw new Error(data.error);
                 } else {
                     throw new Error("No image returned from the backend");
                 }
             })
             .catch(error => {
+                // Hide loading status
+                statusDiv.style.display = 'none';
+                
                 console.error('Error:', error);
-                alert(`Error: ${error.message}`);
+                errorDiv.textContent = error.message || "An unknown error occurred";
+                errorDiv.style.display = 'block';
             });
         }
     </script>

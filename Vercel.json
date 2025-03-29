@@ -10,6 +10,10 @@
         {
             "src": "/api/remove_bg",
             "dest": "api/remove_bg.py"
+        },
+        {
+            "src": "/(.*)",
+            "dest": "/index.html"
         }
     ]
 }
