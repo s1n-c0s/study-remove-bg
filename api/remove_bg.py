@@ -1,13 +1,13 @@
-from rembg import remove
-from PIL import Image
-import io
-import base64
-import traceback
+import requests
+import json
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 
 app = Flask(__name__)
-CORS(app)  # Enable CORS for all routes
+CORS(app)
+
+# Replace with your actual API key
+REMOVE_BG_API_KEY = 'YOUR_API_KEY'
 
 @app.route('/remove_bg', methods=['POST'])
 def remove_bg():
@@ -17,37 +17,23 @@ def remove_bg():
 
         file = request.files['image']
         
-        # Ensure the file is not empty
-        if file.filename == '':
-            return jsonify({'error': 'No selected file'}), 400
-
-        # Open the image
-        input_image = Image.open(file.stream)
+        # Send to remove.bg API
+        response = requests.post(
+            'https://api.remove.bg/v1.0/removebg',
+            files={'image_file': file},
+            data={'size': 'auto'},
+            headers={'X-Api-Key': REMOVE_BG_API_KEY},
+        )
         
-        # Remove background
-        output_image = remove(input_image)
-
-        # Convert to BytesIO
-        img_io = io.BytesIO()
-        output_image.save(img_io, format="PNG")
-        img_io.seek(0)
-
-        # Convert to base64
-        img_base64 = base64.b64encode(img_io.read()).decode('utf-8')
-
-        # Return as JSON
-        return jsonify({'image': img_base64})
+        if response.status_code == 200:
+            # Return the base64 encoded image directly
+            img_base64 = response.json().get('data', {}).get('b64_image')
+            return jsonify({'image': img_base64})
+        else:
+            return jsonify({'error': f'API Error: {response.text}'}), response.status_code
 
     except Exception as e:
-        # Log the full error for debugging
-        print(f"Error processing image: {str(e)}")
-        print(traceback.format_exc())
-        
-        # Return a generic error response
-        return jsonify({
-            'error': 'Failed to process image',
-            'details': str(e)
-        }), 500
+        return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
     app.run(debug=True)
