@@ -1,11 +1,14 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+import logging
+
 
 app = Flask(__name__)
 CORS(app)
 
 # Change this route to match what's expected
-@app.route('/', methods=['POST'])  # Note: Use root path for Vercel serverless functions
+@app.route('/api/remove_bg', methods=['POST'])
+  # Note: Use root path for Vercel serverless functions
 def remove_bg():
     try:
         if 'image' not in request.files:
@@ -19,5 +22,7 @@ def remove_bg():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+logging.basicConfig(level=logging.DEBUG)
+app.logger.debug("API called")
 # This is required for Vercel serverless functions
-app = app.wsgi_app
+from remove_bg import app
