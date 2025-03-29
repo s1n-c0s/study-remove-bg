@@ -1,15 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Background Remover</title>
 </head>
-
 <body>
     <h2>Upload an Image to Remove Background</h2>
-    <label for="uploadInput">Choose an image file:</label>
     <input type="file" id="uploadInput" accept="image/*">
     <button onclick="uploadImage()">Remove Background</button>
     <br><br>
@@ -26,27 +23,31 @@
             let formData = new FormData();
             formData.append('image', input.files[0]);
 
-            fetch('/api/remove_bg', { method: 'POST', body: formData })
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    if (data.image) {
-                        let imgElement = document.getElementById('outputImage');
-                        imgElement.src = 'data:image/png;base64,' + data.image;
-                    } else {
-                        alert("Error: No image returned from the backend");
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert("Something went wrong! Check the console for more details.");
-                });
+            fetch('/api/remove_bg', { 
+                method: 'POST', 
+                body: formData 
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(errorData => {
+                        throw new Error(errorData.error || 'Unknown error occurred');
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.image) {
+                    let imgElement = document.getElementById('outputImage');
+                    imgElement.src = 'data:image/png;base64,' + data.image;
+                } else {
+                    throw new Error("No image returned from the backend");
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert(`Error: ${error.message}`);
+            });
         }
     </script>
 </body>
-
 </html>
